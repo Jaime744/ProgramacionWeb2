@@ -1,0 +1,12 @@
+## variables
+@baseUrl = http://localhost:3000
+@apiUrl = {{baseUrl}}/api
+
+## Ruta raiz y health check
+GET {{baseUrl}}/health
+
+##Info de la api 
+
+GET {{apiUrl}}/
+
+
