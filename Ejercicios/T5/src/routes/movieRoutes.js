@@ -4,16 +4,19 @@ import {
   getMovies,
   getMovieById,
   updateMovie,
-  deleteMovie
+  deleteMovie,
+  getTopMovies
 } from '../controllers/moviesControllers.js';
 
 const router = express.Router();
 
 // Rutas para películas
-router.post('/', createMovie); // Crear película
-router.get('/', getMovies); // Obtener todas las películas
-router.get('/:id', getMovieById); // Obtener película por ID
-router.put('/:id', updateMovie); // Actualizar película por ID
-router.delete('/:id', deleteMovie); // Eliminar película por ID
+router.post('/', createMovie); // Crear pelicula
+router.get('/', getMovies); // Obtener todas las peliculas
+router.get('/:id', getMovieById); // Obtener pelicula por ID
+router.put('/:id', updateMovie); // Actualizar pelicula por ID
+router.delete('/:id', deleteMovie); // Eliminar pelicula por ID
+router.get('/movies/stats/top', getTopMovies);// Obtener top peliculas 
+//router.patch('/:id/cover', uploadMiddleware.single('cover'), uploadCover);
 
 export default router;

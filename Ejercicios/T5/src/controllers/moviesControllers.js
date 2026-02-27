@@ -3,7 +3,7 @@ import Storage from '../models/movieModel.js';
 import { unlink } from 'node:fs/promises';
 import { join } from 'node:path';
 import Movie from '../models/movieModel.js';
-import uploadMiddleware from '../utils/handleStorage.js';  // Importar el middleware de Multer
+import uploadMiddleware from '../utils/handleStorage.js'; 
 
 
 const PUBLIC_URL = process.env.PUBLIC_URL || 'http://localhost:3000';
@@ -48,16 +48,15 @@ export const createMovie = async (req, res) => {
 
 export const getMovies = async (req, res) => {
   try {
-    const { genre } = req.query;  // Obtener el parámetro 'genre' desde la query string
-    
+    const { genre } = req.query;  
     let movies;
     if (genre) {
-      movies = await Movie.find({ genre });  // Filtrar por género si se pasa en la query
+      movies = await Movie.find({ genre });
     } else {
-      movies = await Movie.find();  // Obtener todas las películas si no hay filtro
+      movies = await Movie.find();
     }
 
-    res.status(200).json(movies);  // Enviar la lista de películas
+    res.status(200).json(movies);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -99,19 +98,32 @@ export const deleteMovie = async (req, res) => {
   }
 };
 
-// Ruta para subir la carátula de una película
-router.patch('/:id/cover', uploadMiddleware.single('cover'), async (req, res) => {
+
+export const uploadCover = async (req, res) => {
   try {
     const movie = await Movie.findByIdAndUpdate(
-      req.params.id,
-      { cover: req.file.filename },  
+      req.params.id, 
+      { cover: req.file.filename }, 
       { new: true }
     );
+
     if (!movie) {
       return res.status(404).json({ message: 'Película no encontrada' });
     }
-    res.status(200).json(movie);  
+    res.status(200).json(movie);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-});
+};
+
+export const getTopMovies = async (req, res) => {
+  try {
+    const topMovies = await Movie.find()
+      .sort({ timesRented: -1 }) 
+      .limit(5);  
+    
+    res.status(200).json(topMovies);  
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
