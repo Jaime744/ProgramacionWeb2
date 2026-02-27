@@ -3,6 +3,8 @@ import Storage from '../models/movieModel.js';
 import { unlink } from 'node:fs/promises';
 import { join } from 'node:path';
 import Movie from '../models/movieModel.js';
+import uploadMiddleware from '../utils/handleStorage.js';  // Importar el middleware de Multer
+
 
 const PUBLIC_URL = process.env.PUBLIC_URL || 'http://localhost:3000';
 
@@ -46,8 +48,16 @@ export const createMovie = async (req, res) => {
 
 export const getMovies = async (req, res) => {
   try {
-    const movies = await Movie.find();
-    res.status(200).json(movies);
+    const { genre } = req.query;  // Obtener el parámetro 'genre' desde la query string
+    
+    let movies;
+    if (genre) {
+      movies = await Movie.find({ genre });  // Filtrar por género si se pasa en la query
+    } else {
+      movies = await Movie.find();  // Obtener todas las películas si no hay filtro
+    }
+
+    res.status(200).json(movies);  // Enviar la lista de películas
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -88,3 +98,20 @@ export const deleteMovie = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+// Ruta para subir la carátula de una película
+router.patch('/:id/cover', uploadMiddleware.single('cover'), async (req, res) => {
+  try {
+    const movie = await Movie.findByIdAndUpdate(
+      req.params.id,
+      { cover: req.file.filename },  
+      { new: true }
+    );
+    if (!movie) {
+      return res.status(404).json({ message: 'Película no encontrada' });
+    }
+    res.status(200).json(movie);  
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
