@@ -1,0 +1,13 @@
+### Crear una nueva película
+POST http://localhost:3000/api/movies
+Content-Type: application/json
+
+{
+  "title": "Inception",
+  "director": "Christopher Nolan",
+  "year": 2010,
+  "genre": "scifi",
+  "copies": 10,
+  "availableCopies": 10,
+  "cover": "inception.jpg"
+}
