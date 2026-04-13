@@ -2,8 +2,8 @@
 ### Instala la extensión "REST Client" y usa Ctrl+Click en "Send Request"
 
 @base = http://localhost:3000/api
-@token = PEGA_AQUI_EL_ACCESS_TOKEN
-@refresh = PEGA_AQUI_EL_REFRESH_TOKEN
+@token =eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY5ZGQyMTE3NTQzMmZiNzBjY2ZjMmI3ZCIsImlhdCI6MTc3NjA5OTYwNywiZXhwIjoxNzc2MTAwNTA3fQ.ax6yFzwEMoNS5w4pAW-A9uTMK5dXF1pgnuklEORF9IM
+@refresh =eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY5ZGQyMTE3NTQzMmZiNzBjY2ZjMmI3ZCIsImlhdCI6MTc3NjA5OTYwNywiZXhwIjoxNzc2NzA0NDA3fQ.d1IRxoALh32GYYowxcwSTF2Vy_4UrrNIz1nfIvJWQe8
 
 # ─────────────────────────────────────────────────────────────
 # 1) Registro de usuario
@@ -12,7 +12,7 @@ POST {{base}}/user/register
 Content-Type: application/json
 
 {
-  "email": "juan@ejemplo.com",
+  "email": "pepeLuis@ejemplo.com",
   "password": "MiPass123"
 }
 
@@ -27,7 +27,7 @@ Content-Type: application/json
 Authorization: Bearer {{token}}
 
 {
-  "code": "123456"
+  "code": "372508"
 }
 
 ###
@@ -39,7 +39,7 @@ POST {{base}}/user/login
 Content-Type: application/json
 
 {
-  "email": "juan@ejemplo.com",
+  "email": "juan2@ejemplo.com",
   "password": "MiPass123"
 }
 
