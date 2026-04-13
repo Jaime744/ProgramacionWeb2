@@ -2,9 +2,8 @@
 ### Instala la extensión "REST Client" y usa Ctrl+Click en "Send Request"
 
 @base = http://localhost:3000/api
-@token =eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY5ZGQyMTE3NTQzMmZiNzBjY2ZjMmI3ZCIsImlhdCI6MTc3NjA5OTYwNywiZXhwIjoxNzc2MTAwNTA3fQ.ax6yFzwEMoNS5w4pAW-A9uTMK5dXF1pgnuklEORF9IM
-@refresh =eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY5ZGQyMTE3NTQzMmZiNzBjY2ZjMmI3ZCIsImlhdCI6MTc3NjA5OTYwNywiZXhwIjoxNzc2NzA0NDA3fQ.d1IRxoALh32GYYowxcwSTF2Vy_4UrrNIz1nfIvJWQe8
-
+@token =eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY5ZGQyNDUzMWJkM2FkNjcxZGI5ZWU0NiIsImlhdCI6MTc3NjEwMDQzNSwiZXhwIjoxNzc2MTAxMzM1fQ.xx1qVm2kytTM47D-f-rNMPohFQNizozVp36PXokfr1M
+@refresh =eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY5ZGQyNDUzMWJkM2FkNjcxZGI5ZWU0NiIsImlhdCI6MTc3NjEwMDQzNSwiZXhwIjoxNzc2NzA1MjM1fQ.3QxiNbRc1HRUI_-HAkTeVbDYB7PWliQnN1sLQqA5bvY
 # ─────────────────────────────────────────────────────────────
 # 1) Registro de usuario
 # ─────────────────────────────────────────────────────────────
@@ -27,7 +26,7 @@ Content-Type: application/json
 Authorization: Bearer {{token}}
 
 {
-  "code": "372508"
+  "code": "365504"
 }
 
 ###
@@ -39,7 +38,7 @@ POST {{base}}/user/login
 Content-Type: application/json
 
 {
-  "email": "juan2@ejemplo.com",
+  "email": "pepeLuis@ejemplo.com",
   "password": "MiPass123"
 }
 
@@ -53,8 +52,8 @@ Content-Type: application/json
 Authorization: Bearer {{token}}
 
 {
-  "name": "Juan",
-  "lastName": "García López",
+  "name": "Pepe",
+  "lastName": "Luis López",
   "nif": "12345678A"
 }
 
