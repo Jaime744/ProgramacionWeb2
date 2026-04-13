@@ -1,0 +1,186 @@
+### BildyApp API — Ejemplos de endpoints (REST Client para VS Code)
+### Instala la extensión "REST Client" y usa Ctrl+Click en "Send Request"
+
+@base = http://localhost:3000/api
+@token = PEGA_AQUI_EL_ACCESS_TOKEN
+@refresh = PEGA_AQUI_EL_REFRESH_TOKEN
+
+# ─────────────────────────────────────────────────────────────
+# 1) Registro de usuario
+# ─────────────────────────────────────────────────────────────
+POST {{base}}/user/register
+Content-Type: application/json
+
+{
+  "email": "juan@ejemplo.com",
+  "password": "MiPass123"
+}
+
+###
+
+# ─────────────────────────────────────────────────────────────
+# 2) Validación del email
+# Consulta el código en MongoDB o en los logs de la consola
+# ─────────────────────────────────────────────────────────────
+PUT {{base}}/user/validation
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "code": "123456"
+}
+
+###
+
+# ─────────────────────────────────────────────────────────────
+# 3) Login
+# ─────────────────────────────────────────────────────────────
+POST {{base}}/user/login
+Content-Type: application/json
+
+{
+  "email": "juan@ejemplo.com",
+  "password": "MiPass123"
+}
+
+###
+
+# ─────────────────────────────────────────────────────────────
+# 4a) Onboarding — Datos personales
+# ─────────────────────────────────────────────────────────────
+PUT {{base}}/user/register
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "name": "Juan",
+  "lastName": "García López",
+  "nif": "12345678A"
+}
+
+###
+
+# ─────────────────────────────────────────────────────────────
+# 4b) Onboarding — Datos de compañía (empresa normal)
+# ─────────────────────────────────────────────────────────────
+PATCH {{base}}/user/company
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "isFreelance": false,
+  "name": "Mi Empresa S.L.",
+  "cif": "B12345678",
+  "address": {
+    "street": "Calle Mayor",
+    "number": "10",
+    "postal": "28001",
+    "city": "Madrid",
+    "province": "Madrid"
+  }
+}
+
+###
+
+# 4b) Onboarding — Autónomo (isFreelance: true)
+PATCH {{base}}/user/company
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "isFreelance": true
+}
+
+###
+
+# ─────────────────────────────────────────────────────────────
+# 5) Subir logo de la compañía (multipart/form-data)
+# Usa Thunder Client o Postman para enviar el archivo
+# ─────────────────────────────────────────────────────────────
+# PATCH {{base}}/user/logo
+# Authorization: Bearer {{token}}
+# Content-Type: multipart/form-data; boundary=boundary
+#
+# --boundary
+# Content-Disposition: form-data; name="logo"; filename="logo.png"
+# Content-Type: image/png
+# < ./logo.png
+# --boundary--
+
+###
+
+# ─────────────────────────────────────────────────────────────
+# 6) Obtener usuario (con populate de Company)
+# ─────────────────────────────────────────────────────────────
+GET {{base}}/user
+Authorization: Bearer {{token}}
+
+###
+
+# ─────────────────────────────────────────────────────────────
+# 7a) Refresh token
+# ─────────────────────────────────────────────────────────────
+POST {{base}}/user/refresh
+Content-Type: application/json
+
+{
+  "refreshToken": "{{refresh}}"
+}
+
+###
+
+# ─────────────────────────────────────────────────────────────
+# 7b) Logout
+# ─────────────────────────────────────────────────────────────
+POST {{base}}/user/logout
+Authorization: Bearer {{token}}
+
+###
+
+# ─────────────────────────────────────────────────────────────
+# 8a) Eliminar usuario — Soft delete
+# ─────────────────────────────────────────────────────────────
+DELETE {{base}}/user?soft=true
+Authorization: Bearer {{token}}
+
+###
+
+# 8b) Eliminar usuario — Hard delete
+DELETE {{base}}/user
+Authorization: Bearer {{token}}
+
+###
+
+# ─────────────────────────────────────────────────────────────
+# 9) Cambiar contraseña
+# ─────────────────────────────────────────────────────────────
+PUT {{base}}/user/password
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "currentPassword": "MiPass123",
+  "newPassword": "NuevaPass456"
+}
+
+###
+
+# ─────────────────────────────────────────────────────────────
+# 10) Invitar compañero (solo role admin)
+# ─────────────────────────────────────────────────────────────
+POST {{base}}/user/invite
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "email": "compañero@ejemplo.com",
+  "name": "Ana",
+  "lastName": "Martínez"
+}
+
+###
+
+# ─────────────────────────────────────────────────────────────
+# Healthcheck
+# ─────────────────────────────────────────────────────────────
+GET http://localhost:3000/health

@@ -1,5 +1,5 @@
 ### Crear una nueva película
-POST http://localhost:3000/api/movies/69a180abdc20583ef989983b
+POST http://localhost:3000/api/movies/
 Content-Type: application/json
 
 {

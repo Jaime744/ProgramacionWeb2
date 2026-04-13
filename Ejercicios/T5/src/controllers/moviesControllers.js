@@ -99,7 +99,7 @@ export const deleteMovie = async (req, res) => {
 };
 
 
-export const uploadCover = async (req, res) => {
+/*export const uploadCover = async (req, res) => {
   try {
     const movie = await Movie.findByIdAndUpdate(
       req.params.id, 
@@ -114,7 +114,7 @@ export const uploadCover = async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-};
+};*/
 
 export const getTopMovies = async (req, res) => {
   try {
