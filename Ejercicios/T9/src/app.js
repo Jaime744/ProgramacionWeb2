@@ -30,21 +30,6 @@ app.use("/api/books/:id/reviews", reviewsRoutes);
 // Eliminar reseña directamente: DELETE /api/reviews/:id
 app.delete("/api/reviews/:id", authenticate, deleteReview);
 
-// ── Ruta 404 ──────────────────────────────────────────────────────────────────
-app.use((req, res) => {
-  res.status(404).json({ error: `Ruta no encontrada: ${req.method} ${req.path}` });
-});
-
-// ── Manejador de errores (siempre al final) ───────────────────────────────────
-app.use(errorHandler);
-
-// ── Iniciar servidor ──────────────────────────────────────────────────────────
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`🚀 Servidor corriendo en http://localhost:${PORT}`);
-  console.log(`📚 API de Biblioteca — Entorno: ${process.env.NODE_ENV || "development"}`);
-});
-
 // ── Health check ──────────────────────────────────────────────────────────────
 const prisma = require("./config/prisma");
 
@@ -61,5 +46,22 @@ app.get("/api/health", async (req, res) => {
     res.status(503).json({ status: "error", database: "disconnected" });
   }
 });
+
+// ── Ruta 404 ──────────────────────────────────────────────────────────────────
+app.use((req, res) => {
+  res.status(404).json({ error: `Ruta no encontrada: ${req.method} ${req.path}` });
+});
+
+// ── Manejador de errores (siempre al final) ───────────────────────────────────
+app.use(errorHandler);
+
+// ── Iniciar servidor ──────────────────────────────────────────────────────────
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`🚀 Servidor corriendo en http://localhost:${PORT}`);
+  console.log(`📚 API de Biblioteca — Entorno: ${process.env.NODE_ENV || "development"}`);
+});
+
+
 
 module.exports = app; // Exportamos para tests
