@@ -1,0 +1,55 @@
+# .github/workflows/deploy.yml
+# Se ejecuta automáticamente cuando haces push a la rama main
+
+name: CI/CD — Build & Deploy
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  # ── Job 1: Validar el código ───────────────────────────────────────────────
+  lint-and-validate:
+    name: Validar proyecto
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Generar cliente Prisma
+        run: npx prisma generate
+
+      - name: Validar schema de Prisma
+        run: npx prisma validate
+
+  # ── Job 2: Desplegar en Railway ────────────────────────────────────────────
+  # Solo se ejecuta en push a main (no en pull requests)
+  deploy:
+    name: Desplegar en Railway
+    runs-on: ubuntu-latest
+    needs: lint-and-validate  # Solo despliega si el job anterior pasó
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      - name: Instalar Railway CLI
+        run: npm install -g @railway/cli
+
+      - name: Desplegar en Railway
+        run: railway up --detach
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}  # Configurado en GitHub Secrets

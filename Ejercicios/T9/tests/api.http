@@ -1,0 +1,142 @@
+### ══════════════════════════════════════════════════════════
+### API de Biblioteca - Tests con REST Client (VS Code)
+### Instala la extensión "REST Client" para ejecutarlos
+### ══════════════════════════════════════════════════════════
+
+@base = http://localhost:3000/api
+@token = PEGA_TU_TOKEN_AQUI
+
+# ─── AUTH ────────────────────────────────────────────────────────────────────
+
+### 1. Registrar usuario
+POST {{base}}/auth/register
+Content-Type: application/json
+
+{
+  "email": "test@correo.es",
+  "name": "Usuario Test",
+  "password": "123456"
+}
+
+###
+
+### 2. Login
+POST {{base}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@biblioteca.es",
+  "password": "password123"
+}
+
+###
+
+### 3. Obtener perfil propio
+GET {{base}}/auth/me
+Authorization: Bearer {{token}}
+
+###
+
+# ─── BOOKS ───────────────────────────────────────────────────────────────────
+
+### 4. Listar libros
+GET {{base}}/books
+
+###
+
+### 5. Listar con filtros
+GET {{base}}/books?genre=Fantasía&available=true&page=1&limit=5
+
+###
+
+### 6. Detalle de un libro
+GET {{base}}/books/1
+
+###
+
+### 7. Crear libro (requiere rol LIBRARIAN o ADMIN)
+POST {{base}}/books
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "isbn": "978-84-999-0001-1",
+  "title": "Cien años de soledad",
+  "author": "Gabriel García Márquez",
+  "genre": "Realismo mágico",
+  "publishedYear": 1967,
+  "copies": 3
+}
+
+###
+
+### 8. Actualizar libro
+PUT {{base}}/books/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "available": 2
+}
+
+###
+
+### 9. Eliminar libro (solo ADMIN)
+DELETE {{base}}/books/99
+Authorization: Bearer {{token}}
+
+###
+
+# ─── LOANS ───────────────────────────────────────────────────────────────────
+
+### 10. Mis préstamos
+GET {{base}}/loans
+Authorization: Bearer {{token}}
+
+###
+
+### 11. Todos los préstamos (LIBRARIAN/ADMIN)
+GET {{base}}/loans/all
+Authorization: Bearer {{token}}
+
+###
+
+### 12. Solicitar préstamo
+POST {{base}}/loans
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "bookId": 2
+}
+
+###
+
+### 13. Devolver libro
+PUT {{base}}/loans/1/return
+Authorization: Bearer {{token}}
+
+###
+
+# ─── REVIEWS ─────────────────────────────────────────────────────────────────
+
+### 14. Ver reseñas de un libro
+GET {{base}}/books/2/reviews
+
+###
+
+### 15. Crear reseña (solo si has devuelto el libro)
+POST {{base}}/books/1/reviews
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "rating": 5,
+  "comment": "Una obra maestra de la literatura universal"
+}
+
+###
+
+### 16. Eliminar mi reseña
+DELETE {{base}}/reviews/1
+Authorization: Bearer {{token}}
