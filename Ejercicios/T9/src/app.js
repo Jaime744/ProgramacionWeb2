@@ -45,4 +45,21 @@ app.listen(PORT, () => {
   console.log(`📚 API de Biblioteca — Entorno: ${process.env.NODE_ENV || "development"}`);
 });
 
+// ── Health check ──────────────────────────────────────────────────────────────
+const prisma = require("./config/prisma");
+
+app.get("/api/health", async (req, res) => {
+  try {
+    await prisma.$queryRaw`SELECT 1`;
+    res.json({
+      status: "ok",
+      database: "connected",
+      uptime: Math.floor(process.uptime()) + "s",
+      timestamp: new Date().toISOString(),
+    });
+  } catch {
+    res.status(503).json({ status: "error", database: "disconnected" });
+  }
+});
+
 module.exports = app; // Exportamos para tests
