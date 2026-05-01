@@ -1,0 +1,90 @@
+### BildyApp API — Clientes (REST Client para VS Code)
+
+@base = http://localhost:3000/api
+@token = PEGA_AQUI_EL_ACCESS_TOKEN_DEL_LOGIN
+@clientId = PEGA_AQUI_UN_ID_TRAS_CREAR
+
+# ─────────────────────────────────────────────────────────────
+# 1) Crear cliente
+# ─────────────────────────────────────────────────────────────
+POST {{base}}/client
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "name": "ACME S.L.",
+  "cif": "B12345678",
+  "email": "contacto@acme.com",
+  "phone": "+34 900 000 000",
+  "address": {
+    "street": "Calle del Sol",
+    "number": "12",
+    "postal": "28013",
+    "city": "Madrid",
+    "province": "Madrid"
+  }
+}
+
+###
+
+# ─────────────────────────────────────────────────────────────
+# 2) Listar clientes de la compañía
+# ─────────────────────────────────────────────────────────────
+GET {{base}}/client
+Authorization: Bearer {{token}}
+
+###
+
+# ─────────────────────────────────────────────────────────────
+# 3) Obtener un cliente
+# ─────────────────────────────────────────────────────────────
+GET {{base}}/client/{{clientId}}
+Authorization: Bearer {{token}}
+
+###
+
+# ─────────────────────────────────────────────────────────────
+# 4) Actualizar cliente
+# ─────────────────────────────────────────────────────────────
+PUT {{base}}/client/{{clientId}}
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "phone": "+34 911 222 333",
+  "address": {
+    "street": "Avenida de la Luna",
+    "number": "5",
+    "postal": "28014",
+    "city": "Madrid",
+    "province": "Madrid"
+  }
+}
+
+###
+
+# ─────────────────────────────────────────────────────────────
+# 5a) Soft delete (archivar)
+# ─────────────────────────────────────────────────────────────
+DELETE {{base}}/client/{{clientId}}?soft=true
+Authorization: Bearer {{token}}
+
+###
+
+# 5b) Hard delete
+DELETE {{base}}/client/{{clientId}}
+Authorization: Bearer {{token}}
+
+###
+
+# ─────────────────────────────────────────────────────────────
+# Caso error: CIF duplicado dentro de la misma compañía → 409
+# ─────────────────────────────────────────────────────────────
+POST {{base}}/client
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "name": "Otra empresa",
+  "cif": "B12345678"
+}

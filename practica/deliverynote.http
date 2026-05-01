@@ -1,0 +1,122 @@
+### BildyApp API — Albaranes (REST Client para VS Code)
+
+@base = http://localhost:3000/api
+@token = PEGA_AQUI_EL_ACCESS_TOKEN_DEL_LOGIN
+@clientId  = PEGA_AQUI_EL_ID_DEL_CLIENTE
+@projectId = PEGA_AQUI_EL_ID_DEL_PROYECTO
+@noteId    = PEGA_AQUI_UN_ID_TRAS_CREAR
+
+# ─────────────────────────────────────────────────────────────
+# 1a) Crear albarán formato MATERIAL
+# ─────────────────────────────────────────────────────────────
+POST {{base}}/deliverynote
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "client": "{{clientId}}",
+  "project": "{{projectId}}",
+  "format": "material",
+  "description": "Suministro de cemento para la obra",
+  "workDate": "2025-05-12",
+  "material": "Cemento Portland",
+  "quantity": 25,
+  "unit": "kg"
+}
+
+###
+
+# ─────────────────────────────────────────────────────────────
+# 1b) Crear albarán formato HOURS
+# ─────────────────────────────────────────────────────────────
+POST {{base}}/deliverynote
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "client": "{{clientId}}",
+  "project": "{{projectId}}",
+  "format": "hours",
+  "description": "Trabajos de albañilería",
+  "workDate": "2025-05-13",
+  "hours": 16,
+  "workers": [
+    { "name": "Juan Pérez", "hours": 8 },
+    { "name": "Ana López",  "hours": 8 }
+  ]
+}
+
+###
+
+# ─────────────────────────────────────────────────────────────
+# 2) Listar albaranes
+# ─────────────────────────────────────────────────────────────
+GET {{base}}/deliverynote
+Authorization: Bearer {{token}}
+
+###
+
+# ─────────────────────────────────────────────────────────────
+# 3) Obtener un albarán
+# ─────────────────────────────────────────────────────────────
+GET {{base}}/deliverynote/{{noteId}}
+Authorization: Bearer {{token}}
+
+###
+
+# ─────────────────────────────────────────────────────────────
+# 4) Actualizar albarán (solo si no está firmado)
+# ─────────────────────────────────────────────────────────────
+PUT {{base}}/deliverynote/{{noteId}}
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "description": "Suministro corregido tras revisión",
+  "quantity": 30
+}
+
+###
+
+# ─────────────────────────────────────────────────────────────
+# 5a) Soft delete (archivar)
+# ─────────────────────────────────────────────────────────────
+DELETE {{base}}/deliverynote/{{noteId}}?soft=true
+Authorization: Bearer {{token}}
+
+###
+
+# 5b) Hard delete
+DELETE {{base}}/deliverynote/{{noteId}}
+Authorization: Bearer {{token}}
+
+###
+
+# ─────────────────────────────────────────────────────────────
+# Caso error: faltan campos obligatorios para format=material → 400
+# ─────────────────────────────────────────────────────────────
+POST {{base}}/deliverynote
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "client": "{{clientId}}",
+  "project": "{{projectId}}",
+  "format": "material",
+  "workDate": "2025-05-12"
+}
+
+###
+
+# Caso error: project no pertenece al client → 400
+POST {{base}}/deliverynote
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "client": "000000000000000000000000",
+  "project": "{{projectId}}",
+  "format": "hours",
+  "workDate": "2025-05-12",
+  "workers": [{ "name": "Test", "hours": 1 }]
+}

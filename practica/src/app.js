@@ -3,7 +3,10 @@ import express from 'express'
 import helmet from 'helmet'
 import rateLimit from 'express-rate-limit'
 import { errorHandler } from './middleware/error-handler.js'
-import userRoutes from './routes/user.routes.js'
+import userRoutes         from './routes/user.routes.js'
+import clientRoutes       from './routes/client.routes.js'
+import projectRoutes      from './routes/project.routes.js'
+import deliveryNoteRoutes from './routes/deliverynote.routes.js'
 
 const app = express()
 
@@ -45,7 +48,10 @@ app.use('/uploads', express.static('uploads'))
 app.get('/health', (_req, res) => res.json({ status: 'ok' }))
 
 // ── Rutas ─────────────────────────────────────────────────────────────────────
-app.use('/api/user', userRoutes)
+app.use('/api/user',         userRoutes)
+app.use('/api/client',       clientRoutes)
+app.use('/api/project',      projectRoutes)
+app.use('/api/deliverynote', deliveryNoteRoutes)
 
 // ── Middleware centralizado de errores (T6) ───────────────────────────────────
 app.use(errorHandler)

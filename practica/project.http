@@ -1,0 +1,100 @@
+### BildyApp API — Proyectos (REST Client para VS Code)
+
+@base = http://localhost:3000/api
+@token = PEGA_AQUI_EL_ACCESS_TOKEN_DEL_LOGIN
+@clientId  = PEGA_AQUI_EL_ID_DEL_CLIENTE
+@projectId = PEGA_AQUI_UN_ID_TRAS_CREAR
+
+# ─────────────────────────────────────────────────────────────
+# 1) Crear proyecto (asociado a un cliente existente)
+# ─────────────────────────────────────────────────────────────
+POST {{base}}/project
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "client": "{{clientId}}",
+  "name": "Reforma oficina central",
+  "projectCode": "PRJ-2025-001",
+  "email": "obra@acme.com",
+  "notes": "Obra de reforma en la planta 3.",
+  "address": {
+    "street": "Calle del Sol",
+    "number": "12",
+    "postal": "28013",
+    "city": "Madrid",
+    "province": "Madrid"
+  }
+}
+
+###
+
+# ─────────────────────────────────────────────────────────────
+# 2) Listar proyectos
+# ─────────────────────────────────────────────────────────────
+GET {{base}}/project
+Authorization: Bearer {{token}}
+
+###
+
+# ─────────────────────────────────────────────────────────────
+# 3) Obtener un proyecto
+# ─────────────────────────────────────────────────────────────
+GET {{base}}/project/{{projectId}}
+Authorization: Bearer {{token}}
+
+###
+
+# ─────────────────────────────────────────────────────────────
+# 4) Actualizar proyecto
+# ─────────────────────────────────────────────────────────────
+PUT {{base}}/project/{{projectId}}
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "notes": "La obra arranca el 1 de junio.",
+  "active": true
+}
+
+###
+
+# ─────────────────────────────────────────────────────────────
+# 5a) Soft delete (archivar)
+# ─────────────────────────────────────────────────────────────
+DELETE {{base}}/project/{{projectId}}?soft=true
+Authorization: Bearer {{token}}
+
+###
+
+# 5b) Hard delete
+DELETE {{base}}/project/{{projectId}}
+Authorization: Bearer {{token}}
+
+###
+
+# ─────────────────────────────────────────────────────────────
+# Caso error: projectCode duplicado dentro de la compañía → 409
+# ─────────────────────────────────────────────────────────────
+POST {{base}}/project
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "client": "{{clientId}}",
+  "name": "Otro proyecto",
+  "projectCode": "PRJ-2025-001"
+}
+
+###
+
+# Caso error: cliente de otra compañía → 400
+POST {{base}}/project
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "client": "000000000000000000000000",
+  "name": "Imposible",
+  "projectCode": "PRJ-2025-999"
+}
