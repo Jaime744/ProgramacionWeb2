@@ -138,3 +138,65 @@ Authorization: Bearer {{token}}
   "workDate": "2025-05-12",
   "workers": [{ "name": "Test", "hours": 1 }]
 }
+
+###
+
+# ─────────────────────────────────────────────────────────────
+# Fase 3 — 6) Firmar albarán (multipart/form-data)
+# Coloca un archivo "firma.png" junto a este .http para que el
+# REST Client lo cargue con "< firma.png".
+# ─────────────────────────────────────────────────────────────
+PATCH {{base}}/deliverynote/{{noteId}}/sign
+Authorization: Bearer {{token}}
+Content-Type: multipart/form-data; boundary=----BildyBoundary
+
+------BildyBoundary
+Content-Disposition: form-data; name="signature"; filename="firma.png"
+Content-Type: image/png
+
+< ./firma.png
+------BildyBoundary--
+
+###
+
+# ─────────────────────────────────────────────────────────────
+# Fase 3 — 7) Descargar / redirigir al PDF del albarán
+# Si pdfUrl ya existe → 302 a R2. Si no, lo genera al vuelo.
+# ─────────────────────────────────────────────────────────────
+GET {{base}}/deliverynote/pdf/{{noteId}}
+Authorization: Bearer {{token}}
+
+###
+
+# ─────────────────────────────────────────────────────────────
+# Fase 3 — 8) Casos de error de firma / inmutabilidad
+# ─────────────────────────────────────────────────────────────
+
+# 8a) Intentar modificar un albarán firmado → 409
+PUT {{base}}/deliverynote/{{noteId}}
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "description": "Esto no debería poder modificarse"
+}
+
+###
+
+# 8b) Intentar borrar un albarán firmado → 409
+DELETE {{base}}/deliverynote/{{noteId}}
+Authorization: Bearer {{token}}
+
+###
+
+# 8c) Intentar firmar dos veces → 409
+PATCH {{base}}/deliverynote/{{noteId}}/sign
+Authorization: Bearer {{token}}
+Content-Type: multipart/form-data; boundary=----BildyBoundary
+
+------BildyBoundary
+Content-Disposition: form-data; name="signature"; filename="firma.png"
+Content-Type: image/png
+
+< ./firma.png
+------BildyBoundary--

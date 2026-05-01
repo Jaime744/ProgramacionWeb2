@@ -1,9 +1,13 @@
-// T5 — Controlador de albaranes (MVC)
+// T5 — Controlador de albaranes (MVC) + Fase 3: firma y PDF
+import sharp from 'sharp'
 import { DeliveryNote } from '../models/DeliveryNote.js'
 import { Project }      from '../models/Project.js'
 import { Client }       from '../models/Client.js'
+import { Company }      from '../models/Company.js'
 import { AppError }     from '../utils/AppError.js'
 import { parsePagination, parseSort, paginate } from '../utils/pagination.js'
+import { uploadBuffer } from '../services/storage.service.js'
+import { generateDeliveryNotePdf } from '../services/pdf.service.js'
 
 const NOTE_SORTABLE = ['workDate', 'createdAt', 'updatedAt', 'format', 'signed']
 
@@ -17,6 +21,15 @@ const ensureProjectInCompany = async (projectId, companyId) => {
   const p = await Project.findOne({ _id: projectId, company: companyId, deleted: false })
   if (!p) throw AppError.badRequest('El proyecto no existe en tu compañía')
   return p
+}
+
+// Acceso: el creador o cualquier usuario de la misma compañía puede operar.
+const ensureCanAccess = (note, user) => {
+  const sameCompany = user.company && note.company.toString() === user.company.toString()
+  const isOwner     = note.user.toString() === user._id.toString()
+  if (!sameCompany && !isOwner) {
+    throw AppError.forbidden('No tienes acceso a este albarán')
+  }
 }
 
 // Construye el filtro de listado a partir de los query params soportados.
@@ -93,9 +106,9 @@ export const updateDeliveryNote = async (req, res) => {
   })
   if (!note) throw AppError.notFound('Albarán no encontrado')
 
-  // Un albarán firmado no se puede modificar
+  // Un albarán firmado no se puede modificar (Fase 3 → 409)
   if (note.signed) {
-    throw AppError.forbidden('No se puede modificar un albarán firmado')
+    throw AppError.conflict('No se puede modificar un albarán firmado')
   }
 
   if (req.body.client) {
@@ -125,7 +138,7 @@ export const deleteDeliveryNote = async (req, res) => {
   if (!note) throw AppError.notFound('Albarán no encontrado')
 
   if (note.signed) {
-    throw AppError.forbidden('No se puede borrar un albarán firmado')
+    throw AppError.conflict('No se puede borrar un albarán firmado')
   }
 
   if (soft === 'true') {
@@ -136,4 +149,109 @@ export const deleteDeliveryNote = async (req, res) => {
 
   await note.deleteOne()
   res.json({ data: { message: 'Albarán eliminado permanentemente' } })
+}
+
+// ─── 6) Firmar albarán + generar PDF (Fase 3) ────────────────────────────────
+export const signDeliveryNote = async (req, res) => {
+  if (!req.file) {
+    throw AppError.badRequest('Falta la imagen de la firma (campo "signature")')
+  }
+
+  const note = await DeliveryNote.findOne({
+    _id:     req.params.id,
+    company: req.user.company,
+    deleted: false,
+  })
+  if (!note) throw AppError.notFound('Albarán no encontrado')
+  ensureCanAccess(note, req.user)
+
+  if (note.signed) {
+    throw AppError.conflict('El albarán ya está firmado')
+  }
+
+  // 1) Procesar firma con Sharp → webp 800px máx, calidad 85
+  let signatureWebp
+  try {
+    signatureWebp = await sharp(req.file.buffer)
+      .resize({ width: 800, withoutEnlargement: true })
+      .webp({ quality: 85 })
+      .toBuffer()
+  } catch (err) {
+    throw AppError.badRequest(`Imagen de firma inválida: ${err.message}`)
+  }
+
+  // 2) Subir firma a R2
+  const signatureKey = `signatures/${note._id}-${Date.now()}.webp`
+  const { url: signatureUrl } = await uploadBuffer(
+    signatureWebp,
+    signatureKey,
+    'image/webp',
+  )
+
+  // 3) Marcar como firmado (antes de generar el PDF para que aparezca como tal)
+  note.signed       = true
+  note.signedAt     = new Date()
+  note.signatureUrl = signatureUrl
+
+  // 4) Generar PDF y subirlo a R2
+  const [client, project, company] = await Promise.all([
+    Client.findById(note.client),
+    Project.findById(note.project),
+    Company.findById(note.company),
+  ])
+
+  const pdfBuffer = await generateDeliveryNotePdf({
+    note,
+    company,
+    client,
+    project,
+    user: req.user,
+    signatureBuffer: signatureWebp,
+  })
+
+  const pdfKey = `deliverynotes/${note._id}.pdf`
+  const { url: pdfUrl } = await uploadBuffer(pdfBuffer, pdfKey, 'application/pdf')
+  note.pdfUrl = pdfUrl
+
+  await note.save()
+
+  res.json({ data: note })
+}
+
+// ─── 7) Descargar/redirigir PDF (Fase 3) ─────────────────────────────────────
+export const downloadDeliveryNotePdf = async (req, res) => {
+  const note = await DeliveryNote.findOne({
+    _id:     req.params.id,
+    company: req.user.company,
+    deleted: false,
+  })
+  if (!note) throw AppError.notFound('Albarán no encontrado')
+  ensureCanAccess(note, req.user)
+
+  // Si ya hay un PDF en R2, redirigimos a su URL pública
+  if (note.pdfUrl) {
+    return res.redirect(note.pdfUrl)
+  }
+
+  // Si no, lo generamos al vuelo y lo devolvemos como stream
+  const [client, project, company] = await Promise.all([
+    Client.findById(note.client),
+    Project.findById(note.project),
+    Company.findById(note.company),
+  ])
+
+  const pdfBuffer = await generateDeliveryNotePdf({
+    note,
+    company,
+    client,
+    project,
+    user: req.user,
+  })
+
+  res.setHeader('Content-Type', 'application/pdf')
+  res.setHeader(
+    'Content-Disposition',
+    `inline; filename="albaran-${note._id}.pdf"`,
+  )
+  res.send(pdfBuffer)
 }
