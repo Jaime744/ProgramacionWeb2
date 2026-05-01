@@ -49,15 +49,33 @@ Authorization: Bearer {{token}}
 ###
 
 # ─────────────────────────────────────────────────────────────
-# 2) Listar albaranes
+# 2) Listar albaranes (paginado por defecto: page=1&limit=10)
 # ─────────────────────────────────────────────────────────────
 GET {{base}}/deliverynote
 Authorization: Bearer {{token}}
 
 ###
 
+# 2b) Paginación + filtros por proyecto, cliente y formato
+GET {{base}}/deliverynote?page=1&limit=5&project={{projectId}}&client={{clientId}}&format=material&sort=-workDate
+Authorization: Bearer {{token}}
+
+###
+
+# 2c) Solo firmados, en un rango de fechas
+GET {{base}}/deliverynote?signed=true&from=2025-05-01&to=2025-05-31
+Authorization: Bearer {{token}}
+
+###
+
+# 2d) Solo no firmados
+GET {{base}}/deliverynote?signed=false
+Authorization: Bearer {{token}}
+
+###
+
 # ─────────────────────────────────────────────────────────────
-# 3) Obtener un albarán
+# 3) Obtener un albarán (con populate de user, client y project)
 # ─────────────────────────────────────────────────────────────
 GET {{base}}/deliverynote/{{noteId}}
 Authorization: Bearer {{token}}

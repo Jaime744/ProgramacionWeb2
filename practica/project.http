@@ -30,9 +30,21 @@ Authorization: Bearer {{token}}
 ###
 
 # ─────────────────────────────────────────────────────────────
-# 2) Listar proyectos
+# 2) Listar proyectos (paginado por defecto: page=1&limit=10)
 # ─────────────────────────────────────────────────────────────
 GET {{base}}/project
+Authorization: Bearer {{token}}
+
+###
+
+# 2b) Paginación + filtros por cliente, nombre y estado activo
+GET {{base}}/project?page=1&limit=5&client={{clientId}}&name=reforma&active=true&sort=-createdAt
+Authorization: Bearer {{token}}
+
+###
+
+# 2c) Solo proyectos inactivos
+GET {{base}}/project?active=false
 Authorization: Bearer {{token}}
 
 ###
@@ -69,6 +81,22 @@ Authorization: Bearer {{token}}
 
 # 5b) Hard delete
 DELETE {{base}}/project/{{projectId}}
+Authorization: Bearer {{token}}
+
+###
+
+# ─────────────────────────────────────────────────────────────
+# 6) Listar proyectos archivados
+# ─────────────────────────────────────────────────────────────
+GET {{base}}/project/archived?page=1&limit=10
+Authorization: Bearer {{token}}
+
+###
+
+# ─────────────────────────────────────────────────────────────
+# 7) Restaurar proyecto archivado
+# ─────────────────────────────────────────────────────────────
+PATCH {{base}}/project/{{projectId}}/restore
 Authorization: Bearer {{token}}
 
 ###

@@ -2,12 +2,26 @@
 import { Project } from '../models/Project.js'
 import { Client }  from '../models/Client.js'
 import { AppError } from '../utils/AppError.js'
+import { parsePagination, parseSort, paginate } from '../utils/pagination.js'
+
+const PROJECT_SORTABLE = ['name', 'projectCode', 'createdAt', 'updatedAt', 'active']
 
 // El cliente referenciado debe pertenecer a la compañía del usuario y estar activo
 const ensureClientInCompany = async (clientId, companyId) => {
   const client = await Client.findOne({ _id: clientId, company: companyId, deleted: false })
   if (!client) throw AppError.badRequest('El cliente no existe en tu compañía')
   return client
+}
+
+// Construye el filtro común a list/archived a partir de los query params.
+const buildProjectFilter = (req, { deleted }) => {
+  const filter = { company: req.user.company, deleted }
+  if (req.query.client) filter.client = req.query.client
+  if (req.query.name)   filter.name   = { $regex: req.query.name, $options: 'i' }
+  if (req.query.active !== undefined) {
+    filter.active = req.query.active === 'true'
+  }
+  return filter
 }
 
 // ─── 1) Crear proyecto ───────────────────────────────────────────────────────
@@ -36,10 +50,22 @@ export const createProject = async (req, res) => {
   res.status(201).json({ data: project })
 }
 
-// ─── 2) Listar proyectos ─────────────────────────────────────────────────────
+// ─── 2) Listar proyectos (paginado + filtros) ────────────────────────────────
 export const listProjects = async (req, res) => {
-  const projects = await Project.find({ company: req.user.company, deleted: false })
-  res.json({ data: projects })
+  const { page, limit, skip } = parsePagination(req.query)
+  const sort   = parseSort(req.query.sort, PROJECT_SORTABLE)
+  const filter = buildProjectFilter(req, { deleted: false })
+  const result = await paginate(Project, filter, { page, limit, skip, sort })
+  res.json(result)
+}
+
+// ─── 2b) Listar proyectos archivados ─────────────────────────────────────────
+export const listArchivedProjects = async (req, res) => {
+  const { page, limit, skip } = parsePagination(req.query)
+  const sort   = parseSort(req.query.sort, PROJECT_SORTABLE)
+  const filter = buildProjectFilter(req, { deleted: true })
+  const result = await paginate(Project, filter, { page, limit, skip, sort })
+  res.json(result)
 }
 
 // ─── 3) Obtener proyecto concreto ────────────────────────────────────────────
@@ -98,4 +124,18 @@ export const deleteProject = async (req, res) => {
 
   await project.deleteOne()
   res.json({ data: { message: 'Proyecto eliminado permanentemente' } })
+}
+
+// ─── 6) Restaurar proyecto archivado ─────────────────────────────────────────
+export const restoreProject = async (req, res) => {
+  const project = await Project.findOne({
+    _id:     req.params.id,
+    company: req.user.company,
+    deleted: true,
+  })
+  if (!project) throw AppError.notFound('Proyecto archivado no encontrado')
+
+  project.deleted = false
+  await project.save()
+  res.json({ data: project })
 }

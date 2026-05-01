@@ -3,6 +3,9 @@ import { DeliveryNote } from '../models/DeliveryNote.js'
 import { Project }      from '../models/Project.js'
 import { Client }       from '../models/Client.js'
 import { AppError }     from '../utils/AppError.js'
+import { parsePagination, parseSort, paginate } from '../utils/pagination.js'
+
+const NOTE_SORTABLE = ['workDate', 'createdAt', 'updatedAt', 'format', 'signed']
 
 const ensureClientInCompany = async (clientId, companyId) => {
   const c = await Client.findOne({ _id: clientId, company: companyId, deleted: false })
@@ -14,6 +17,23 @@ const ensureProjectInCompany = async (projectId, companyId) => {
   const p = await Project.findOne({ _id: projectId, company: companyId, deleted: false })
   if (!p) throw AppError.badRequest('El proyecto no existe en tu compañía')
   return p
+}
+
+// Construye el filtro de listado a partir de los query params soportados.
+const buildNoteFilter = (req) => {
+  const filter = { company: req.user.company, deleted: false }
+  if (req.query.project) filter.project = req.query.project
+  if (req.query.client)  filter.client  = req.query.client
+  if (req.query.format)  filter.format  = req.query.format
+  if (req.query.signed !== undefined) {
+    filter.signed = req.query.signed === 'true'
+  }
+  if (req.query.from || req.query.to) {
+    filter.workDate = {}
+    if (req.query.from) filter.workDate.$gte = new Date(req.query.from)
+    if (req.query.to)   filter.workDate.$lte = new Date(req.query.to)
+  }
+  return filter
 }
 
 // ─── 1) Crear albarán ────────────────────────────────────────────────────────
@@ -40,19 +60,26 @@ export const createDeliveryNote = async (req, res) => {
   res.status(201).json({ data: note })
 }
 
-// ─── 2) Listar albaranes ─────────────────────────────────────────────────────
+// ─── 2) Listar albaranes (paginado + filtros) ────────────────────────────────
 export const listDeliveryNotes = async (req, res) => {
-  const notes = await DeliveryNote.find({ company: req.user.company, deleted: false })
-  res.json({ data: notes })
+  const { page, limit, skip } = parsePagination(req.query)
+  const sort   = parseSort(req.query.sort, NOTE_SORTABLE, { workDate: -1 })
+  const filter = buildNoteFilter(req)
+  const result = await paginate(DeliveryNote, filter, { page, limit, skip, sort })
+  res.json(result)
 }
 
-// ─── 3) Obtener albarán concreto ─────────────────────────────────────────────
+// ─── 3) Obtener albarán concreto (con populate) ──────────────────────────────
 export const getDeliveryNote = async (req, res) => {
   const note = await DeliveryNote.findOne({
     _id:     req.params.id,
     company: req.user.company,
     deleted: false,
   })
+    .populate('user',    'email name')
+    .populate('client',  'name cif email')
+    .populate('project', 'name projectCode')
+
   if (!note) throw AppError.notFound('Albarán no encontrado')
   res.json({ data: note })
 }

@@ -28,9 +28,21 @@ Authorization: Bearer {{token}}
 ###
 
 # ─────────────────────────────────────────────────────────────
-# 2) Listar clientes de la compañía
+# 2) Listar clientes (paginado por defecto: page=1&limit=10)
 # ─────────────────────────────────────────────────────────────
 GET {{base}}/client
+Authorization: Bearer {{token}}
+
+###
+
+# 2b) Paginación + filtro por nombre (parcial, case-insensitive) + sort
+GET {{base}}/client?page=1&limit=5&name=acme&sort=-createdAt
+Authorization: Bearer {{token}}
+
+###
+
+# 2c) Sort ascendente por nombre
+GET {{base}}/client?sort=name
 Authorization: Bearer {{token}}
 
 ###
@@ -73,6 +85,22 @@ Authorization: Bearer {{token}}
 
 # 5b) Hard delete
 DELETE {{base}}/client/{{clientId}}
+Authorization: Bearer {{token}}
+
+###
+
+# ─────────────────────────────────────────────────────────────
+# 6) Listar archivados (mismos query params: page, limit, name, sort)
+# ─────────────────────────────────────────────────────────────
+GET {{base}}/client/archived?page=1&limit=10
+Authorization: Bearer {{token}}
+
+###
+
+# ─────────────────────────────────────────────────────────────
+# 7) Restaurar cliente archivado
+# ─────────────────────────────────────────────────────────────
+PATCH {{base}}/client/{{clientId}}/restore
 Authorization: Bearer {{token}}
 
 ###

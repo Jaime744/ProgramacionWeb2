@@ -5,9 +5,11 @@ import { validate }       from '../middleware/validate.js'
 import {
   createClient,
   listClients,
+  listArchivedClients,
   getClient,
   updateClient,
   deleteClient,
+  restoreClient,
 } from '../controllers/client.controller.js'
 import {
   createClientSchema,
@@ -18,6 +20,10 @@ const router = Router()
 
 // Todas las rutas de clientes requieren JWT
 router.use(authMiddleware)
+
+// /archived debe declararse antes que /:id para no ser capturado como param.
+router.get('/archived', listArchivedClients)
+router.patch('/:id/restore', restoreClient)
 
 router.post('/',      validate(createClientSchema), createClient)
 router.get('/',       listClients)

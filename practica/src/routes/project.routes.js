@@ -5,9 +5,11 @@ import { validate }       from '../middleware/validate.js'
 import {
   createProject,
   listProjects,
+  listArchivedProjects,
   getProject,
   updateProject,
   deleteProject,
+  restoreProject,
 } from '../controllers/project.controller.js'
 import {
   createProjectSchema,
@@ -18,6 +20,10 @@ const router = Router()
 
 // Todas las rutas de proyectos requieren JWT
 router.use(authMiddleware)
+
+// /archived debe declararse antes que /:id para no ser capturado como param.
+router.get('/archived', listArchivedProjects)
+router.patch('/:id/restore', restoreProject)
 
 router.post('/',      validate(createProjectSchema), createProject)
 router.get('/',       listProjects)

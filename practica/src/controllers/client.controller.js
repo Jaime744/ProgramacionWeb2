@@ -2,6 +2,18 @@
 // Express 5 gestiona errores async automáticamente
 import { Client } from '../models/Client.js'
 import { AppError } from '../utils/AppError.js'
+import { parsePagination, parseSort, paginate } from '../utils/pagination.js'
+
+const CLIENT_SORTABLE = ['name', 'cif', 'createdAt', 'updatedAt']
+
+// Construye el filtro común a list/archived a partir de los query params.
+const buildClientFilter = (req, { deleted }) => {
+  const filter = { company: req.user.company, deleted }
+  if (req.query.name) {
+    filter.name = { $regex: req.query.name, $options: 'i' } // búsqueda parcial case-insensitive
+  }
+  return filter
+}
 
 // ─── 1) Crear cliente ────────────────────────────────────────────────────────
 export const createClient = async (req, res) => {
@@ -25,10 +37,22 @@ export const createClient = async (req, res) => {
   res.status(201).json({ data: client })
 }
 
-// ─── 2) Listar clientes ──────────────────────────────────────────────────────
+// ─── 2) Listar clientes (paginado + filtros) ─────────────────────────────────
 export const listClients = async (req, res) => {
-  const clients = await Client.find({ company: req.user.company, deleted: false })
-  res.json({ data: clients })
+  const { page, limit, skip } = parsePagination(req.query)
+  const sort   = parseSort(req.query.sort, CLIENT_SORTABLE)
+  const filter = buildClientFilter(req, { deleted: false })
+  const result = await paginate(Client, filter, { page, limit, skip, sort })
+  res.json(result)
+}
+
+// ─── 2b) Listar clientes archivados ──────────────────────────────────────────
+export const listArchivedClients = async (req, res) => {
+  const { page, limit, skip } = parsePagination(req.query)
+  const sort   = parseSort(req.query.sort, CLIENT_SORTABLE)
+  const filter = buildClientFilter(req, { deleted: true })
+  const result = await paginate(Client, filter, { page, limit, skip, sort })
+  res.json(result)
 }
 
 // ─── 3) Obtener cliente concreto ─────────────────────────────────────────────
@@ -83,4 +107,18 @@ export const deleteClient = async (req, res) => {
 
   await client.deleteOne()
   res.json({ data: { message: 'Cliente eliminado permanentemente' } })
+}
+
+// ─── 6) Restaurar cliente archivado ──────────────────────────────────────────
+export const restoreClient = async (req, res) => {
+  const client = await Client.findOne({
+    _id:     req.params.id,
+    company: req.user.company,
+    deleted: true,
+  })
+  if (!client) throw AppError.notFound('Cliente archivado no encontrado')
+
+  client.deleted = false
+  await client.save()
+  res.json({ data: client })
 }
