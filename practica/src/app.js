@@ -16,12 +16,14 @@ const app = express()
 // ── Seguridad (T6) ────────────────────────────────────────────────────────────
 app.use(helmet())
 
-// Rate limiting global: 100 peticiones cada 15 minutos por IP
-app.use(rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max:      100,
-  message:  { status: 'fail', message: 'Demasiadas peticiones. Inténtalo más tarde.' },
-}))
+// Rate limiting global: 100 peticiones cada 15 minutos por IP (deshabilitado en tests)
+if (process.env.NODE_ENV !== 'test') {
+  app.use(rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max:      100,
+    message:  { status: 'fail', message: 'Demasiadas peticiones. Inténtalo más tarde.' },
+  }))
+}
 
 // Sanitización manual contra inyección NoSQL (compatible con Express 5)
 app.use((req, _res, next) => {
