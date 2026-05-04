@@ -1,8 +1,11 @@
 // T4, T6 — Configuración de Express con seguridad y middlewares
 import express from 'express'
 import helmet from 'helmet'
+import mongoose from 'mongoose'
 import rateLimit from 'express-rate-limit'
+import swaggerUi from 'swagger-ui-express'
 import { errorHandler } from './middleware/error-handler.js'
+import { swaggerSpec }  from './config/swagger.js'
 import userRoutes         from './routes/user.routes.js'
 import clientRoutes       from './routes/client.routes.js'
 import projectRoutes      from './routes/project.routes.js'
@@ -44,8 +47,42 @@ app.use(express.urlencoded({ extended: true }))
 // ── Archivos estáticos (logos subidos) ────────────────────────────────────────
 app.use('/uploads', express.static('uploads'))
 
-// ── Healthcheck ───────────────────────────────────────────────────────────────
-app.get('/health', (_req, res) => res.json({ status: 'ok' }))
+/**
+ * @openapi
+ * /health:
+ *   get:
+ *     tags: [Health]
+ *     summary: Estado del servicio
+ *     security: []
+ *     responses:
+ *       200:
+ *         description: Servicio operativo
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:    { type: string, example: ok }
+ *                 db:        { type: string, enum: [connected, disconnected], example: connected }
+ *                 uptime:    { type: number, example: 123.45 }
+ *                 timestamp: { type: string, format: date-time }
+ */
+app.get('/health', (_req, res) => {
+  const db = mongoose.connection.readyState === 1 ? 'connected' : 'disconnected'
+  res.json({
+    status:    'ok',
+    db,
+    uptime:    process.uptime(),
+    timestamp: new Date().toISOString(),
+  })
+})
+
+// ── Swagger UI (Fase 4) ───────────────────────────────────────────────────────
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
+  explorer: true,
+  swaggerOptions: { persistAuthorization: true },
+}))
+app.get('/api-docs.json', (_req, res) => res.json(swaggerSpec))
 
 // ── Rutas ─────────────────────────────────────────────────────────────────────
 app.use('/api/user',         userRoutes)
